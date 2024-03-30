@@ -3,6 +3,7 @@ const User = require('./models/user.model.js');
 const bcrypt = require('bcryptjs');
 const { secret } = require('./config.js'); // extracting secret value from the secret object
 const {validationResult} = require('express-validator');
+const jwt = require('jsonwebtoken');
 
 const generateToken = (id, role) => { // generate token for user
     const payload = {
@@ -35,7 +36,7 @@ const register = async (req, res) => { // register new user
         if (user) {
             res.status(400).json({message: 'User is already existing'});
         }
-        const userRole = await Role.findOne({name: "user"});
+        const userRole = await Role.findOne({name: "admin"});
         const hashPassword = bcrypt.hashSync(password, 7);
         const newUser = new User({username, password: hashPassword, role: [userRole.name]});
         await newUser.save();
@@ -57,7 +58,7 @@ const login = async (req, res) => { // login user
         if(!validPassword) { 
             res.status(400).json({message: 'Incorrect password'});
         }
-        const token = generateToken(user._id, user._role);
+        const token = generateToken(user._id, user.role);
         res.json({token});
     } catch (error) {
         console.log(error);
